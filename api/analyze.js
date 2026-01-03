@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     const response = await fetch(process.env.LANGFLOW_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.LANGFLOW_API_TOKEN}`,
+        'Authorization': process.env.LANGFLOW_API_TOKEN,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -23,16 +23,16 @@ export default async function handler(req, res) {
       })
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).json({ error: errorText });
+    }
+
     const data = await response.json();
 
-    return res.status(200).json({
-      what_happened: data.what_happened || "No data detected",
-      why_it_matters: data.why_it_matters || "N/A",
-      risk_level: data.risk_level || "Low",
-      recommended_action: data.recommended_action || "No action suggested"
-    });
+    return res.status(200).json(data);
 
-  } catch (error) {
-    return res.status(500).json({ error: 'AI analysis failed' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 }
